@@ -70,34 +70,34 @@ Sudo is needed because this is being created in the root folder, the `-p` flag i
 
 2. Copy and paste the following HTML page into a file named `index.html` inside the folder you just created
 
-```
+```html
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>2420</title>
     <style>
-        * {
-            color: #db4b4b;
-            background: #16161e;
-        }
-        body {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-            margin: 0;
-        }
-        h1 {
-            text-align: center;
-            font-family: sans-serif;
-        }
+      * {
+        color: #db4b4b;
+        background: #16161e;
+      }
+      body {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+        margin: 0;
+      }
+      h1 {
+        text-align: center;
+        font-family: sans-serif;
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <h1>All your base are belong to us</h1>
-</body>
+  </body>
 </html>
 ```
 
@@ -119,6 +119,8 @@ server {
     }
 }
 ```
+
+This is a server block. Each server block connects a path to nginx's service on the specified port.
 
 > Note: This means the port will listen on port 80 (the default HTTP port), and serve our `index.html` from the location `/web/html/nginx-2420`
 
