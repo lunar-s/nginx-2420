@@ -147,3 +147,15 @@ By doing it this way, you can easily manage which sites you want to enable or di
 Because the `nginx.conf` file was edited, restart the nginx service:
 
 `sudo systemctl restart nginx`
+
+### Finishing up
+
+With the `nginx.conf` file complete, symlinks in place, and index.html specified, you can now visit your site!
+
+In your browser, type in your Droplet's IP and see it in action 🚀
+
+### Troubleshooting
+
+Having errors when launching your nginx service? Use `sudo nginx -t` for a better explanation on what is wrong!
+
+Usually, these errors are formatting mistakes in `nginx.conf` or `nginx-2420.conf`.
