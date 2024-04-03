@@ -110,10 +110,9 @@ In nginx's configuration folder, `/etc/nginx`, create two directories.
 In the `sites-available` directory, create the file `nginx-2420.conf` with the following code:
 
 ```
-nginx-2420 {
+server {
     listen 80;
     listen [::]:80;
-    server_name nginx-2420;
     root /web/html/nginx-2420;
     location / {
         index index.php index.html index.htm;
@@ -149,6 +148,12 @@ Because the `nginx.conf` file was edited, restart the nginx service:
 `sudo systemctl restart nginx`
 
 ### Finishing up
+
+Because nginx comes with a default site, you must delete that server block.
+
+In the `nginx.conf` file, delete the first server block within the main http block.
+
+---
 
 With the `nginx.conf` file complete, symlinks in place, and index.html specified, you can now visit your site!
 
