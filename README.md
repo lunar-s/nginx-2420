@@ -82,6 +82,8 @@ server {
 }
 ```
 
+The above configuration will send any requests received by nginx from either /hey or /echo to the backend, which is hosted on the localhost port 8080.
+
 Restart nginx
 
 `sudo systemctl restart nginx`
@@ -102,6 +104,6 @@ curl -X POST -H "Content-Type: application/json" \
 
 Should receive:
 
-`{"message": "Hello from your server"}`
+> {"message": "Hello from your server"}
 
 And that's all! 🚀
