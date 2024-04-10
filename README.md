@@ -88,7 +88,7 @@ Restart nginx
 
 ## Testing
 
-`curl http://<IP or droplet>/hey`
+`curl http://<IP of droplet>/hey`
 
 Should receive:
 
@@ -96,8 +96,8 @@ Should receive:
 
 ```bash
 curl -X POST -H "Content-Type: application/json" \
-  -d '{"message": "Hello from your server"}' \
-  http://178.128.64.137/echo
+  -d '{"message": "Hello from your server"}\n' \
+  http://<IP of droplet>/echo
 ```
 
 Should receive:
