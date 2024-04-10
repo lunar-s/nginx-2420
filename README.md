@@ -1,115 +1,71 @@
-# How to setup nginx on an Arch DigitalOcean Droplet
+# Setting up Firewall, Reverse Proxy, and a Backend
 
-## What you'll do
+## Setting up Firewall
 
-- Install a text editor
-- Install nginx
-- Configure and run nginx
+Install the firewall with:
 
-### Installing Vim (text editor) and nginx
+`sudo pacman -S ufw`
 
-0. Upgrade your system if it's been over a week!
+### Configuring the firewall
 
-   `sudo pacman -Syu`
+By default, ufw is configured to:
 
-1. Install a text editor (Vim is this example)
+- Deny all incoming traffic
+- Allow all outgoing traffic
 
-   `sudo pacman -S vim`
+First we'll allow SSH so we can connect to the machine:
 
-2. Make sure Vim is installed
+`sudo ufw allow ssh`
 
-   `vim --version | grep "VIM - Vi"`
+Because we're setting up a web server reverse proxy, we'll also allow HTTP:
 
-> Note: Use grep here to shorten the `vim --version`, it's quite lengthy!
+`sudo ufw allow http`
 
-3. Install nginx
+Let's start the firewall service:
 
-   `sudo pacman -S nginx`
+`sudo systemctl enable --now ufw`
 
-4. Check its status
+To list the allowed connections, use
 
-   `sudo systemctl status nginx`
+`sudo ufw status verbose`
 
-   It's not running and it's disabled!
+And enable the firewall
 
-5. Start nginx
+`sudo ufw enable`
 
-   `sudo systemctl start nginx`
+Our firewall is ready! Let's move on to the backend setup
 
-6. Enable it to start automatically on boot
+## Backend Setup
 
-   `sudo systemctl enable nginx`
+Download the hello-server file and place it in `/web/backend`
 
-> Note: if you want to condense this into a single command `sudo systemctl start --now nginx`
+Create a unit file, `hello-server.service` in `/etc/systemd/system`
 
-You should see a reply:
+```bash
+[Unit]
+Description=Hello Service
 
-> Created symlink /etc/systemd/system/multi-user.target.wants/nginx.service → /usr/lib/systemd/system/nginx.service
+[Service]
+Type=simple
+ExecStart=/web/backend/hello-service
 
-This means in `/etc/systemd/system/multi-user.target.wants` there is a new service (also known as a unit file).
-This unit file is in charge of handling the nginx binary.
-It is not required (it's wanted) so the system can start without it.
-
-In status, it is now enabled and active!
-
-```
-nginx.service - A high performance web server and a reverse proxy server
-  Loaded: loaded (/usr/lib/systemd/system/nginx.service; enabled; preset: disabled)
-  Active: active (running) since Wed 2024-03-20 18:51:36 UTC; 1h 25min ago
+[Install]
+WantedBy=multi-user.target
 ```
 
-All right, with that out of the way let's set up our nginx site!
+Refresh systemctl:
 
-### Creating the site
+`sudo systemctl daemon-reload`
 
-1. Create a folder in the root directory that will contain your site files. For the rest of the tutorial, `nginx-2420` can be named anything you want. Just be consistent with how you name and locate this file!
+Start the backend server:
 
-`sudo mkdir -p /web/html/nginx-2420`
+`sudo systemctl start --now hello-server.service`
 
-Sudo is needed because this is being created in the root folder, the `-p` flag is to create nested directories in a single command.
+## Setup Reverse Proxy
 
-2. Copy and paste the following HTML page into a file named `index.html` inside the folder you just created
+Edit your /etc/nginx/sites-available/nginx-2420.conf to add the new `proxy_pass` configuration
 
-```html
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>2420</title>
-    <style>
-      * {
-        color: #db4b4b;
-        background: #16161e;
-      }
-      body {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        height: 100vh;
-        margin: 0;
-      }
-      h1 {
-        text-align: center;
-        font-family: sans-serif;
-      }
-    </style>
-  </head>
-  <body>
-    <h1>All your base are belong to us</h1>
-  </body>
-</html>
-```
-
-### Configuring nginx
-
-In nginx's configuration folder, `/etc/nginx`, create two directories.
-
-`sudo mkdir /etc/nginx/sites-available` and `sudo mkdir /etc/nginx/sites-enabled`
-
-In the `sites-available` directory, create the file `nginx-2420.conf` with the following code:
-
-```
+```bash
 server {
     listen 80;
     listen [::]:80;
@@ -117,52 +73,35 @@ server {
     location / {
         index index.php index.html index.htm;
     }
+    location /hey {
+	    proxy_pass http://127.0.0.1:8080;
+    }
+    location /echo {
+    	    proxy_pass http://127.0.0.1:8080;
+    }
 }
 ```
 
-This is a server block. Each server block connects a path to nginx's service on the specified port.
-
-> Note: This means the port will listen on port 80 (the default HTTP port), and serve our `index.html` from the location `/web/html/nginx-2420`
-
-In `/etc/nginx/nginx.conf`, add `include sites-enabled/*;` to your http block like so:
-
-```
-http {
-    include mime.types;
-    default_type application/octet-stream;
-    include sites-enabled/*;
-    ...
-}
-```
-
-To enable a site, create a symlink of the conf to sites-enabled
-
-`ln -s /etc/nginx/sites-available/nginx-2420.conf /etc/nginx/sites-enabled/nginx-2420.conf`
-
-To disable a site, unlink the symlink!
-
-`unlink /etc/nginx/sites-enabled/example.conf`
-
-By doing it this way, you can easily manage which sites you want to enable or disable. This is better than having everything in the `nginx.conf` file, which can be changed by your package manager or accidentally deleted when uninstalling nginx.
-
-Because the `nginx.conf` file was edited, restart the nginx service:
+Restart nginx
 
 `sudo systemctl restart nginx`
 
-### Finishing up
+## Testing
 
-Because nginx comes with a default site, you must delete that server block.
+`curl http://<IP or droplet>/hey`
 
-In the `nginx.conf` file, delete the first server block within the main http block.
+Should receive:
 
----
+> Hey there
 
-With the `nginx.conf` file complete, symlinks in place, and index.html specified, you can now visit your site!
+```bash
+curl -X POST -H "Content-Type: application/json" \
+  -d '{"message": "Hello from your server"}' \
+  http://178.128.64.137/echo
+```
 
-In your browser, type in your Droplet's IP and see it in action 🚀
+Should receive:
 
-### Troubleshooting
+`{"message": "Hello from your server"}`
 
-Having errors when launching your nginx service? Use `sudo nginx -t` for a better explanation on what is wrong!
-
-Usually, these errors are formatting mistakes in `nginx.conf` or `nginx-2420.conf`.
+And that's all! 🚀
